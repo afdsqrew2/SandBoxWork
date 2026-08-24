@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,6 +31,16 @@ public class PlacementSystem : MonoBehaviour
         previewRenderer = cellingIndicator.GetComponentInChildren<Renderer>();
     }
 
+    private void OnEnable()
+    {
+       EventCenter.Instance.AddEventListener<int>(E_EventType.E_BuildButtonClick, StartPlacement);
+    }
+    
+    private void OnDisable()
+    {
+        EventCenter.Instance.RemoveEventListener<int>(E_EventType.E_BuildButtonClick,StartPlacement );
+    }
+    
     public void StartPlacement(int ID)
     {
         StopPlacement();
@@ -42,8 +53,6 @@ public class PlacementSystem : MonoBehaviour
         cellingIndicator.SetActive(true);
         inputManager.OnClicked += PlaceStructure;
         inputManager.OnExit += StopPlacement;
-        
-
     }
 
     private void PlaceStructure()

@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5120366839219738520}
   m_Layer: 0
-  m_Name: chairParent
+  m_Name: ChairParent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -105,12 +105,12 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: b9230b6f54c714eb9ba8a5b4a1c44378, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c7d11fc4c26f54f3e917c65e6a3f4091, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.42, y: 0.7}
+  m_Size: {x: 0.42, y: 0.79}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
