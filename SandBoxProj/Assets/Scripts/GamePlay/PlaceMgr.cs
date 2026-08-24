@@ -70,7 +70,8 @@ public class PlacementSystem : MonoBehaviour
             return;
         }
         
-        GameObject newGO = Instantiate(database.objectsData[seletedObjectIndex].Prefab);
+        //GameObject newGO = Instantiate(database.objectsData[seletedObjectIndex].Prefab);
+        GameObject newGO = PoolMgr.Instance.GetObj(database.objectsData[seletedObjectIndex].Name);
         newGO.transform.position = grid.CellToWorld(gridPosition);
 
         //GridData seletedData = database.objectsData[seletedObjectIndex].ID == 0 ? floorData : furniData;

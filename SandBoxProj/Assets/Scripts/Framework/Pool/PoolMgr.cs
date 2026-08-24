@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,8 +12,7 @@ public class PoolData
     //用来记录使用中的对象的 
     private List<GameObject> usedList = new List<GameObject>();
 
-    //抽屉上限 场景上同时存在的对象的上限个数
-    private int maxNum;
+ 
 
     //抽屉根对象 用来进行布局管理的对象
     private GameObject rootObj;
@@ -24,17 +22,13 @@ public class PoolData
 
     public int UsedCount => usedList.Count;
 
-    /// <summary>
-    /// 进行使用中对象数量和最大容量进行比较 小于返回true 需要实例化
-    /// </summary>
-    public bool NeedCreate => usedList.Count < maxNum;
 
     /// <summary>
     /// 初始化构造函数
     /// </summary>
     /// <param name="root">柜子（缓存池）父对象</param>
     /// <param name="name">抽屉父对象的名字</param>
-    public PoolData(GameObject root, string name, GameObject usedObj)
+    public PoolData(GameObject root, string name, GameObject usedObj,bool isWarmUp = false)
     {
         //开启功能时 才会动态创建 建立父子关系
         if(PoolMgr.isOpenLayout)
@@ -45,18 +39,16 @@ public class PoolData
             rootObj.transform.SetParent(root.transform);
         }
 
-        //创建抽屉时 外部肯定是会动态创建一个对象的
-        //我们应该将其记录到 使用中的对象容器中
-        PushUsedList(usedObj);
-
-        PoolObj poolObj = usedObj.GetComponent<PoolObj>();
-        if (poolObj == null)
+        if (isWarmUp)
         {
-            Debug.LogError("请为使用缓存池功能的预设体对象挂载PoolObj脚本 用于设置数量上限");
-            return;
+            Push(usedObj);
         }
-        //记录上限数量值
-        maxNum = poolObj.maxNum;
+        else
+        {
+            //创建抽屉时 外部肯定是会动态创建一个对象的
+            //我们应该将其记录到 使用中的对象容器中
+            PushUsedList(usedObj);
+        }
     }
 
     /// <summary>
@@ -187,24 +179,14 @@ public class PoolMgr : BaseManager<PoolMgr>
         if (poolObj == null && isOpenLayout)
             poolObj = new GameObject("Pool");
 
-        GameObject obj;
+        GameObject obj = null;
 
         #region 加入了数量上限后的逻辑判断
         if(!poolDic.ContainsKey(name) ||
-            (poolDic[name].Count == 0 && poolDic[name].NeedCreate))
+            (poolDic[name].Count == 0 ))
         {
-            //动态创建对象
-            //没有的时候 通过资源加载 去实例化出一个GameObject
-            obj = GameObject.Instantiate(Resources.Load<GameObject>(name));
-            //避免实例化出来的对象 默认会在名字后面加一个(Clone)
-            //我们重命名过后 方便往里面放
-            obj.name = name;
-
-            //创建抽屉
-            if(!poolDic.ContainsKey(name))
-                poolDic.Add(name, new PoolData(poolObj, name, obj));
-            else//实例化出来的对象 需要记录到使用中的对象容器中
-                poolDic[name].PushUsedList(obj);
+            Debug.LogError("unexpected");
+            
         }
         //当抽屉中有对象 或者 使用中的对象超上限了 直接去取出来用
         else
@@ -278,37 +260,7 @@ public class PoolMgr : BaseManager<PoolMgr>
     /// <param name="obj">希望放入的对象</param>
     public void PushObj(GameObject obj)
     {
-        #region 因为失活 父子关系都放入了 抽屉对象中处理 所以不需要再处理这些内容了
-        ////总之，目的就是要把对象隐藏起来
-        ////并不是直接移除对象 而是将对象失活 一会儿再用 用的时候再激活它
-        ////除了这种方式，还可以把对象放倒屏幕外看不见的地方
-        //obj.SetActive(false);
-
-        ////把失活的对象（要放入抽屉中的对象） 父对象先设置为 柜子（缓存池）根对象
-        //obj.transform.SetParent(poolObj.transform);
-        #endregion
-
-        //没有抽屉 创建抽屉
-        //if (!poolDic.ContainsKey(obj.name))
-        //    poolDic.Add(obj.name, new PoolData(poolObj, obj.name));
-
-        //往抽屉当中放对象
         poolDic[obj.name].Push(obj);
-
-        ////如果存在对应的抽屉容器 直接放
-        //if(poolDic.ContainsKey(name))
-        //{
-        //    //往栈（抽屉）中放入对象
-        //    poolDic[name].Push(obj);
-        //}
-        ////否则 需要先创建抽屉 再放
-        //else
-        //{
-        //    //先创建抽屉
-        //    poolDic.Add(name, new Stack<GameObject>());
-        //    //再往抽屉里面放
-        //    poolDic[name].Push(obj);
-        //}
     }
 
     /// <summary>
@@ -346,5 +298,39 @@ public class PoolMgr : BaseManager<PoolMgr>
         poolDic.Clear();
         poolObj = null;
         poolObjectDic.Clear();
+    }
+
+    public void WarmUp(string name,GameObject prefabGO,int warmUpCount)
+    {
+        //如果根物体为空 就创建
+        if (poolObj == null && isOpenLayout)
+            poolObj = new GameObject("Pool");
+
+        GameObject obj;
+
+        if(!poolDic.ContainsKey(name) ||
+           (poolDic[name].Count == 0))
+        {
+            int curCount = 0;
+            for (int i = 0; i < warmUpCount; i++)
+            {
+                //动态创建对象
+                //没有的时候 通过资源加载 去实例化出一个GameObject
+                obj = GameObject.Instantiate(prefabGO);
+                //避免实例化出来的对象 默认会在名字后面加一个(Clone)
+                //我们重命名过后 方便往里面放
+                obj.name = name;
+
+                //创建抽屉
+                if (!poolDic.ContainsKey(name))
+                    poolDic.Add(name, new PoolData(poolObj, name, obj, true));
+                else
+                    poolDic[name].Push(obj);
+            }
+        }
+        else
+        {
+            Debug.LogError("出现了同名池子请检查");
+        }
     }
 }

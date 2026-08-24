@@ -18,13 +18,16 @@ MonoBehaviour:
     <Size>k__BackingField: {x: 1, y: 1}
     <Prefab>k__BackingField: {fileID: 5495195866809561931, guid: 7033b5c8be96d456895e13c1112512c5,
       type: 3}
+    <WarmUpCount>k__BackingField: 100
   - <Name>k__BackingField: Chair
     <ID>k__BackingField: 1
     <Size>k__BackingField: {x: 1, y: 1}
     <Prefab>k__BackingField: {fileID: 3436396018452237107, guid: 7e39c893e86b44e63bc3bc9a54f08f48,
       type: 3}
+    <WarmUpCount>k__BackingField: 100
   - <Name>k__BackingField: Bed
     <ID>k__BackingField: 2
     <Size>k__BackingField: {x: 1, y: 1}
     <Prefab>k__BackingField: {fileID: 1258488996709971748, guid: c13bb4874ae9b42c2ac11268ce0bcc24,
       type: 3}
+    <WarmUpCount>k__BackingField: 100
