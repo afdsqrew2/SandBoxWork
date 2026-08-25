@@ -17,16 +17,8 @@ public class InputMgr : MonoBehaviour
 
     private void Update()
     {
-        //yyf 老·输入系统报错
-        /*
-        if(Input.GetMouseButtonDown(0))
-            OnClicked?.Invoke();
-        if(Input.GetKeyDown(KeyCode.Escape))
-            OnExit?.Invoke();
-            */
         if(Mouse.current!=null && Mouse.current.leftButton.isPressed)
             OnClicked?.Invoke();
-        
         
         if(Touchscreen.current!= null && Touchscreen.current.touches.Count>0 && Touchscreen.current.touches[0].press.wasPressedThisFrame)
             OnClicked?.Invoke();

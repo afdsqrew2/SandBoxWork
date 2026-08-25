@@ -1,9 +1,10 @@
 using UnityEngine;
 
-public class GamePlayMgr : MonoBehaviour
+public class GamePlayMgr  : SingletonMono<GamePlayMgr>
 {
     [SerializeField]
-    private ObjectsDatabaseSO database;
+    public ObjectsDatabaseSO database;
+    
 
     // Start is called before the first frame update
     void Start()
@@ -17,9 +18,4 @@ public class GamePlayMgr : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
