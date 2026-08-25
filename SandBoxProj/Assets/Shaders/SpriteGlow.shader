@@ -1,4 +1,4 @@
-Shader "Custom/InnerGlow_Optimized"
+Shader "Custom/InnerGlow_SRP"
 {
     Properties
     {
@@ -23,54 +23,63 @@ Shader "Custom/InnerGlow_Optimized"
         Pass
         {
             Cull Back
-            Lighting Off
             ZWrite Off
             Offset -1, -1
-            Fog { Mode Off }
             Blend SrcAlpha OneMinusSrcAlpha
             
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "UnityCG.cginc"
-
-            sampler2D _MainTex;
-            half4 _Color;
-            half _Factor;
-            half _SampleRange;
-            half2 _TexSize;
-            half2 _SampleInterval;
+            
+            // 引入 SRP 核心库 (以 URP 为例，若使用 HDRP 请替换为对应路径)
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct appdata_t
             {
                 float4 vertex : POSITION;
                 half2 texcoord : TEXCOORD0;
-                fixed4 color : COLOR;
+                half4 color : COLOR;
             };
     
             struct v2f
             {
                 float4 vertex : SV_POSITION;
                 half2 uv : TEXCOORD0;
-                fixed4 color : COLOR;
-                half2 radius : TEXCOORD1; // 将半径计算移至顶点阶段
+                half4 color : COLOR;
+                half2 radius : TEXCOORD1;
             };
+
+            // 【关键优化 1】材质属性必须封装在 UnityPerMaterial 中
+            CBUFFER_START(UnityPerMaterial)
+                float4 _MainTex_ST;
+                half4 _Color;
+                half _Factor;
+                half _SampleRange;
+                half2 _SampleInterval;
+                half2 _TexSize;
+            CBUFFER_END
+
+    
+            // 【关键优化 3】纹理和采样器必须放在 CBUFFER 外面
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
 
             v2f vert(appdata_t v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.texcoord;
+                // 使用 SRP 标准的坐标转换函数
+                o.vertex = TransformObjectToHClip(v.vertex.xyz);
+                o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
                 o.color = v.color;
-                // 在顶点着色器中预计算半径，避免在片元中重复计算
+                // 在顶点着色器中预计算半径
                 o.radius = _SampleInterval / _TexSize;
                 return o;
             }
 
-            fixed4 frag(v2f i) : COLOR
+            half4 frag(v2f i) : SV_Target
             {
                 // 获取当前像素颜色（只需采样一次中心点）
-                fixed4 col = tex2D(_MainTex, i.uv) * i.color;
+                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv) * i.color;
                 
                 half range = _SampleRange;
                 half inner = 0;
@@ -91,7 +100,7 @@ Shader "Custom/InnerGlow_Optimized"
                         if (k == 0 && j == 0) continue; 
                         
                         half2 offset = half2(k, j) * i.radius;
-                        fixed4 m = tex2D(_MainTex, i.uv + offset);
+                        half4 m = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv + offset);
                         outter += 1 - m.a;
                         inner += m.a;
                     }
@@ -114,7 +123,7 @@ Shader "Custom/InnerGlow_Optimized"
                 
                 return col;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }
