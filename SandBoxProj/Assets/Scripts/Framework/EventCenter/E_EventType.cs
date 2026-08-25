@@ -10,5 +10,5 @@ public enum E_EventType
     E_Default,
     E_Test,
     E_BuildButtonClick,
-
+    E_LeftAreaButtonClick,
 }
